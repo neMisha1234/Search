@@ -1,28 +1,34 @@
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-async def college_choise(query, dct):
-    if query.data == 'exit':
-        return
-    CURRENT = int(query.data)
-    college = dct[CURRENT]
-    markup = [[InlineKeyboardButton("Назад", callback_data="back"),
-               InlineKeyboardButton('Добавить в избранное 🔥', callback_data='add_to')]]
-    message = f'{college["name"]} \n'
+async def college_choise(update, dct, pref=None):
+    markup = [[InlineKeyboardButton("Назад", callback_data=f"{pref}-back")]]
+    if pref != 'favback':
+        markup[0].append(InlineKeyboardButton('Добавить в избранное 🔥', callback_data=f'{pref}-add_to'))
+    message = f'{dct["name"]} \n'
     message += f'Контактная информация: \n'
-    message += f"Сайт: {college['url']} \nТелефон: {college['Phones']}\n"
+    message += f"Сайт: {dct['url']} \nТелефон: {dct['Phones']}\n"
     message += '-' * 30 + '\n'
 
-    await query.edit_message_text(text=message, reply_markup=InlineKeyboardMarkup(markup))
+    await update.edit_message_text(text=message, reply_markup=InlineKeyboardMarkup(markup))
 
 
-async def back_to_college(query, dct):
-    if query.data == 'back':
-        markup = [[InlineKeyboardButton('ВЕРНУТЬСЯ В МЕНЮ', callback_data=f"exit")]]
+async def back_to_college(query, dct, pref=None):
+    if query.data.split('-')[-1] == 'back':
+        markup = [[InlineKeyboardButton('ВЕРНУТЬСЯ В МЕНЮ', callback_data=f"{pref}-exit")]]
         for i in dct:
             coll = dct[i]
-            markup.append([InlineKeyboardButton(coll['name'], callback_data=f"{i}")])
+            print(coll)
+            markup.append([InlineKeyboardButton(coll['name'], callback_data=f"{pref}-{i}")])
         await query.edit_message_text(text="Выберите ВУЗ:", reply_markup=InlineKeyboardMarkup(markup))
-    else:
+    elif query.data.split('-')[-1] == 'add_to':
         return True
 
+
+async def back_to_favorite(query, dct):
+    if query.data.split('-')[-1] == 'back':
+        markup = [[InlineKeyboardButton('ВЕРНУТЬСЯ В МЕНЮ', callback_data=f"Fav-exit")]]
+        for i in dct:
+            coll = dct[i]
+            markup.append([InlineKeyboardButton(coll['name'], callback_data=f"Fav-{i}")])
+        await query.edit_message_text(text="Выберите ВУЗ:", reply_markup=InlineKeyboardMarkup(markup))
